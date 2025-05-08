@@ -6,6 +6,7 @@ firebase.initializeApp({
   apiKey: "AIzaSyDx-Ie5FZDjPTd0TIKC8UEi10AqUiMF5g0",
   authDomain: "profimedicoptik.firebaseapp.com",
   projectId: "profimedicoptik",
+  storageBucket: "profimedicoptik.firebasestorage.app",
   messagingSenderId: "1064595454841",
   appId: "1:1064595454841:web:1dec24da0d4c836faf4da8",
 });
