@@ -19,6 +19,35 @@
         .catch(err => console.error('Eroare la înregistrarea Service Worker:', err));
     });
   }
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "API_KEY",
+    authDomain: "PROJECT_ID.firebaseapp.com",
+    projectId: "PROJECT_ID",
+    messagingSenderId: "SENDER_ID",
+    appId: "APP_ID"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const messaging = firebase.messaging();
+
+  // Cerere permisiune
+  messaging.requestPermission()
+    .then(() => messaging.getToken({ vapidKey: "VAPID_PUBLIC_KEY" }))
+    .then(token => {
+      console.log("Tokenul dispozitivului:", token);
+      // Salvează tokenul în baza ta de date dacă vrei să trimiți ulterior
+    })
+    .catch(err => console.error('Eroare permisiune notificări:', err));
+
+  // Notificare când aplicația e deschisă
+  messaging.onMessage(payload => {
+    console.log('Notificare primită:', payload);
+    alert(`${payload.notification.title}\n${payload.notification.body}`);
+  });
+</script>  
 </script>
    body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
