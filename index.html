@@ -598,33 +598,45 @@
       <button onclick="addProduct()" class="mobile-btn">Adaugă produs</button>
     </div>
     <!-- ==== Început panel Mișcări Stoc ==== -->
-<div class="panel">
-  <h2>Mișcări stoc</h2>
-  <div class="form-group">
-    <label for="movement-product">Produs</label>
-    <select id="movement-product"></select>
-  </div>
-  <div class="form-group">
-    <label for="movement-type">Tip mișcare</label>
-    <select id="movement-type">
-      <option value="in">Intrare</option>
-      <option value="out">Ieșire</option>
-    </select>
-  </div>
-  <div class="form-group">
-    <label for="movement-date">Data</label>
-    <input type="date" id="movement-date">
-  </div>
-  <button onclick="addMovement()" class="mobile-btn">Adaugă mișcare</button>
-  <div class="table-container" style="margin-top:15px;">
-    <table id="movements-table">
-      <thead>
-        <tr><th>Produs</th><th>Tip</th><th>Data</th></tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+<h3>Mișcări Stoc</h3>
+
+<div class="form-group">
+  <label for="movement-product">Produs</label>
+  <select id="movement-product"></select>
 </div>
+
+<div class="form-group">
+  <label for="movement-type">Tip</label>
+  <select id="movement-type">
+    <option value="in">Intrare</option>
+    <option value="out">Ieșire</option>
+  </select>
+</div>
+
+<div class="form-group">
+  <label for="movement-quantity">Cantitate</label>
+  <input type="number" id="movement-quantity" min="1" value="1">
+</div>
+
+<div class="form-group">
+  <label for="movement-date">Dată</label>
+  <input type="date" id="movement-date">
+</div>
+
+<button onclick="addMovement()" class="mobile-btn">Adaugă mișcare</button>
+
+<table id="movements-table">
+  <thead>
+    <tr>
+      <th>Produs</th>
+      <th>Tip</th>
+      <th>Cantitate</th>
+      <th>Dată</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
 <!-- ==== Sfârșit panel Mișcări Stoc ==== -->
 
     <div class="panel">
@@ -1735,15 +1747,33 @@
     }
  
     // ==== Script Mișcări Stoc ====
+// === sus, înainte de initPWA() ===
 let movements = JSON.parse(localStorage.getItem('movements')) || [];
 
 function addMovement() {
-  const prod = document.getElementById('movement-product').value;
-  const type = document.getElementById('movement-type').value;
-  const date = document.getElementById('movement-date').value;
-  if (!prod || !date) { alert('Completează produsul și data!'); return; }
-  movements.push({ prod, type, date });
+  const prod  = document.getElementById('movement-product').value;
+  const type  = document.getElementById('movement-type').value;
+  const qty   = parseInt(document.getElementById('movement-quantity').value, 10);
+  const date  = document.getElementById('movement-date').value;
+  if (!prod || !date || isNaN(qty) || qty < 1) {
+    return alert('Completează produsul, tipul, cantitatea (>=1) și data!');
+  }
+
+  // Salvează mișcarea
+  movements.push({ prod, type, qty, date });
   localStorage.setItem('movements', JSON.stringify(movements));
+
+  // Actualizează stocul
+  let inv = JSON.parse(localStorage.getItem('inventory')||'[]');
+  const idx = inv.findIndex(item => item.product === prod);
+  if (idx > -1) {
+    inv[idx].quantity += (type === 'in' ? qty : -qty);
+    if (inv[idx].quantity < 0) inv[idx].quantity = 0;
+    localStorage.setItem('inventory', JSON.stringify(inv));
+    displayInventory();    // re-afișează tabelul de stocuri
+  }
+
+  // Refresh istoric
   displayMovements();
 }
 
@@ -1754,24 +1784,15 @@ function displayMovements() {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${m.prod}</td>
-      <td>${m.type === 'in' ? 'Intrare' : 'Ieșire'}</td>
+      <td>${m.type==='in'?'Intrare':'Ieșire'}</td>
+      <td>${m.qty}</td>
       <td>${new Date(m.date).toLocaleDateString()}</td>
     `;
     tbody.appendChild(tr);
   });
 }
+// === jos, înainte de initPWA() ===
 
-window.addEventListener('load', () => {
-  // Populează lista de produse
-  const prodSelect = document.getElementById('movement-product');
-  inventory.forEach(item => {
-    const opt = document.createElement('option');
-    opt.value = item.product;
-    opt.textContent = item.product;
-    prodSelect.appendChild(opt);
-  });
-  displayMovements();
-});
 // ==== Sfârșit Script Mișcări Stoc ====
 
     // Inițializare la încărcarea paginii
@@ -1787,7 +1808,19 @@ window.addEventListener('load', () => {
       displayAppointments();
       displayInventory();
       displayClients();
-      
+      // populăm dropdown-ul de produse pentru mișcări
+const movementSelect = document.getElementById('movement-product');
+JSON.parse(localStorage.getItem('inventory') || '[]')
+  .forEach(item => {
+    const opt = document.createElement('option');
+    opt.value = item.product;
+    opt.textContent = item.product;
+    movementSelect.appendChild(opt);
+  });
+
+// afișăm istoricul mișcărilor
+displayMovements();
+
       // Ascultător pentru schimbarea serviciului
       document.getElementById('service').addEventListener('change', updatePrice);
       document.getElementById('report-period').addEventListener('change', updateReport);
