@@ -6,20 +6,7 @@
 
 <link rel="manifest" href="manifest.json">
 ...
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('service-worker.js')
-        .then(registration => {
-          console.log('✔ Service Worker înregistrat:', registration.scope);
-        })
-        .catch(error => {
-          console.error('✘ Eroare Service Worker:', error);
-        });
-    });
-  }
-</script>
-
+  
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Profimedic Optik - Sistem Gestiune</title>
@@ -55,6 +42,19 @@
     console.log('PWA installed');
     document.getElementById('installAppBtn').style.display = 'none';
   });
+</script>
+    <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(registration => {
+          console.log('✅ Service Worker înregistrat cu succes la: ', registration.scope);
+        })
+        .catch(error => {
+          console.error('❌ Eroare la înregistrarea Service Worker:', error);
+        });
+    });
+  }
 </script>
 
     /* Stiluri generale */
