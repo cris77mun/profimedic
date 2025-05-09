@@ -573,7 +573,40 @@
 
   <button onclick="addStockEntry()">Adaugă</button>
 </div>
-
+        <hr>
+<h3>Intrări/Ieșiri Stoc</h3>
+<div class="form-group">
+  <label for="stock-action-type">Tip acțiune</label>
+  <select id="stock-action-type">
+    <option value="intrare">Intrare</option>
+    <option value="iesire">Ieșire</option>
+  </select>
+</div>
+<div class="form-group">
+  <label for="stock-action-product">Produs</label>
+  <input type="text" id="stock-action-product" placeholder="Nume produs">
+</div>
+<div class="form-group">
+  <label for="stock-action-branch">Filială</label>
+  <select id="stock-action-branch">
+    <option value="Tg. Frumos">Tg. Frumos</option>
+    <option value="Hârlău">Hârlău</option>
+    <option value="Flămânzi">Flămânzi</option>
+  </select>
+</div>
+<div class="form-group">
+  <label for="stock-action-date">Dată</label>
+  <input type="date" id="stock-action-date">
+</div>
+<div class="form-group">
+  <label for="stock-action-invoice">Număr Factură</label>
+  <input type="text" id="stock-action-invoice" placeholder="Ex: INV1234">
+</div>
+<div class="form-group">
+  <label for="stock-action-quantity">Cantitate</label>
+  <input type="number" id="stock-action-quantity" min="1" value="1">
+</div>
+<button onclick="addStockAction()" class="mobile-btn">Înregistrează acțiunea</button>
 <div class="panel">
   <h2>Istoric Intrări / Ieșiri</h2>
   <div class="table-container">
@@ -591,7 +624,6 @@
     </table>
   </div>
 </div>
-
   <div class="form-group">
     <label for="stock-product">Produs</label>
     <select id="stock-product">
@@ -708,7 +740,24 @@
       </div>
     </div>
   </div>
-  
+  <hr>
+<h3>Istoric intrări/ieșiri</h3>
+<div class="table-container">
+  <table id="stock-history-table">
+    <thead>
+      <tr>
+        <th>Tip</th>
+        <th>Produs</th>
+        <th>Filială</th>
+        <th>Dată</th>
+        <th>Factură</th>
+        <th>Cantitate</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
   <!-- Panou Clienți -->
   <div id="clients" class="tab-content">
     <div class="panel">
@@ -1838,6 +1887,59 @@ function populateStockProductList() {
     productSelect.appendChild(opt);
   });
 }
+let stockHistory = JSON.parse(localStorage.getItem('stockHistory')) || [];
+
+function addStockAction() {
+  const type = document.getElementById('stock-action-type').value;
+  const product = document.getElementById('stock-action-product').value.trim();
+  const branch = document.getElementById('stock-action-branch').value;
+  const date = document.getElementById('stock-action-date').value;
+  const invoice = document.getElementById('stock-action-invoice').value.trim();
+  const quantity = parseInt(document.getElementById('stock-action-quantity').value);
+
+  if (!product || !date || !invoice || quantity <= 0) {
+    alert('Completează toate câmpurile obligatorii.');
+    return;
+  }
+
+  const newAction = {
+    type,
+    product,
+    branch,
+    date,
+    invoice,
+    quantity
+  };
+
+  stockHistory.push(newAction);
+  localStorage.setItem('stockHistory', JSON.stringify(stockHistory));
+  displayStockHistory();
+
+  // Golește formularul
+  document.getElementById('stock-action-product').value = '';
+  document.getElementById('stock-action-invoice').value = '';
+  document.getElementById('stock-action-quantity').value = '1';
+}
+
+function displayStockHistory() {
+  const tbody = document.querySelector('#stock-history-table tbody');
+  tbody.innerHTML = '';
+
+  const sortedHistory = stockHistory.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  sortedHistory.forEach(action => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${action.type}</td>
+      <td>${action.product}</td>
+      <td>${action.branch}</td>
+      <td>${new Date(action.date).toLocaleDateString()}</td>
+      <td>${action.invoice}</td>
+      <td>${action.quantity}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
 
     // Inițializare la încărcarea paginii
     window.onload = function() {
@@ -1853,7 +1955,7 @@ function populateStockProductList() {
       displayInventory();
       displayClients();
       populateStockProductList();
-displayStockHistory();
+      displayStockHistory();
       
       // Ascultător pentru schimbarea serviciului
       document.getElementById('service').addEventListener('change', updatePrice);
