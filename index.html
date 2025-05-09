@@ -538,7 +538,92 @@
   <div id="inventory" class="tab-content">
     <div class="panel">
       <h2>Gestiune Stocuri</h2>
-      
+      <div class="panel">
+  <h2>Intrări / Ieșiri Stoc</h2>
+        <div class="panel">
+  <h2>Intrări / Ieșiri din Stoc</h2>
+
+  <div class="form-group">
+    <label for="stock-product">Produs</label>
+    <select id="stock-product"></select>
+  </div>
+
+  <div class="form-group">
+    <label for="stock-operation">Operație</label>
+    <select id="stock-operation">
+      <option value="in">Intrare</option>
+      <option value="out">Ieșire</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="stock-quantity">Cantitate</label>
+    <input type="number" id="stock-quantity" min="1" value="1">
+  </div>
+
+  <div class="form-group">
+    <label for="stock-date">Dată</label>
+    <input type="date" id="stock-date">
+  </div>
+
+  <div class="form-group">
+    <label for="stock-invoice">Nr. Factură</label>
+    <input type="text" id="stock-invoice" placeholder="Ex: F123/2024">
+  </div>
+
+  <button onclick="addStockEntry()">Adaugă</button>
+</div>
+
+<div class="panel">
+  <h2>Istoric Intrări / Ieșiri</h2>
+  <div class="table-container">
+    <table id="stock-history-table">
+      <thead>
+        <tr>
+          <th>Produs</th>
+          <th>Operație</th>
+          <th>Cantitate</th>
+          <th>Dată</th>
+          <th>Nr. Factură</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+  <div class="form-group">
+    <label for="stock-product">Produs</label>
+    <select id="stock-product">
+      <!-- Se va popula dinamic -->
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="stock-operation">Operație</label>
+    <select id="stock-operation">
+      <option value="in">Intrare</option>
+      <option value="out">Ieșire</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="stock-quantity">Cantitate</label>
+    <input type="number" id="stock-quantity" min="1" value="1">
+  </div>
+
+  <div class="form-group">
+    <label for="stock-date">Data</label>
+    <input type="date" id="stock-date">
+  </div>
+
+  <div class="form-group">
+    <label for="stock-invoice">Număr factură</label>
+    <input type="text" id="stock-invoice" placeholder="Ex: F123/2024">
+  </div>
+
+  <button class="mobile-btn success" onclick="addStockEntry()">Adaugă operație</button>
+</div> 
       <div class="form-group">
         <label for="product-name">Nume produs</label>
         <input type="text" id="product-name" placeholder="Ex: Lentile Acuvue">
@@ -575,6 +660,23 @@
     
     <div class="panel">
       <h2>Stocuri pe filiale</h2>
+      <div class="panel">
+  <h2>Istoric intrări / ieșiri</h2>
+  <div class="table-container">
+    <table id="stock-history-table">
+      <thead>
+        <tr>
+          <th>Produs</th>
+          <th>Operație</th>
+          <th>Cantitate</th>
+          <th>Data</th>
+          <th>Factură</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
       <div class="search-box">
         <input type="text" id="inventory-search" placeholder="Caută produs..." oninput="filterInventory()">
       </div>
@@ -1679,7 +1781,64 @@
         }
       });
     }
-    
+    // Variabilă istoric intrări/ieșiri
+let stockHistory = JSON.parse(localStorage.getItem('stockHistory')) || [];
+
+// Adaugă o operație în istoric
+function addStockEntry() {
+  const product = document.getElementById('stock-product').value;
+  const operation = document.getElementById('stock-operation').value;
+  const quantity = parseInt(document.getElementById('stock-quantity').value);
+  const date = document.getElementById('stock-date').value;
+  const invoice = document.getElementById('stock-invoice').value;
+
+  if (!product || !quantity || !date || !invoice) {
+    alert("Completează toate câmpurile!");
+    return;
+  }
+
+  stockHistory.push({ product, operation, quantity, date, invoice });
+  localStorage.setItem('stockHistory', JSON.stringify(stockHistory));
+
+  displayStockHistory();
+  document.getElementById('stock-quantity').value = 1;
+  document.getElementById('stock-invoice').value = '';
+}
+
+// Afișează istoricul în tabel
+function displayStockHistory() {
+  const tbody = document.querySelector('#stock-history-table tbody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  stockHistory.forEach(entry => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${entry.product}</td>
+      <td>${entry.operation === 'in' ? 'Intrare' : 'Ieșire'}</td>
+      <td>${entry.quantity}</td>
+      <td>${entry.date}</td>
+      <td>${entry.invoice}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+// Populează lista de produse în select
+function populateStockProductList() {
+  const productSelect = document.getElementById('stock-product');
+  if (!productSelect) return;
+  productSelect.innerHTML = '';
+
+  const uniqueProducts = [...new Set(inventory.map(item => item.product))];
+  uniqueProducts.forEach(product => {
+    const opt = document.createElement('option');
+    opt.value = product;
+    opt.textContent = product;
+    productSelect.appendChild(opt);
+  });
+}
+
     // Inițializare la încărcarea paginii
     window.onload = function() {
       const now = new Date();
@@ -1693,6 +1852,8 @@
       displayAppointments();
       displayInventory();
       displayClients();
+      populateStockProductList();
+displayStockHistory();
       
       // Ascultător pentru schimbarea serviciului
       document.getElementById('service').addEventListener('change', updatePrice);
