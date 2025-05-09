@@ -597,7 +597,36 @@
       
       <button onclick="addProduct()" class="mobile-btn">Adaugă produs</button>
     </div>
-    
+    <!-- ==== Început panel Mișcări Stoc ==== -->
+<div class="panel">
+  <h2>Mișcări stoc</h2>
+  <div class="form-group">
+    <label for="movement-product">Produs</label>
+    <select id="movement-product"></select>
+  </div>
+  <div class="form-group">
+    <label for="movement-type">Tip mișcare</label>
+    <select id="movement-type">
+      <option value="in">Intrare</option>
+      <option value="out">Ieșire</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label for="movement-date">Data</label>
+    <input type="date" id="movement-date">
+  </div>
+  <button onclick="addMovement()" class="mobile-btn">Adaugă mișcare</button>
+  <div class="table-container" style="margin-top:15px;">
+    <table id="movements-table">
+      <thead>
+        <tr><th>Produs</th><th>Tip</th><th>Data</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+<!-- ==== Sfârșit panel Mișcări Stoc ==== -->
+
     <div class="panel">
       <h2>Stocuri pe filiale</h2>
       <div class="search-box">
@@ -1704,7 +1733,47 @@
         }
       });
     }
-    
+ 
+    // ==== Script Mișcări Stoc ====
+let movements = JSON.parse(localStorage.getItem('movements')) || [];
+
+function addMovement() {
+  const prod = document.getElementById('movement-product').value;
+  const type = document.getElementById('movement-type').value;
+  const date = document.getElementById('movement-date').value;
+  if (!prod || !date) { alert('Completează produsul și data!'); return; }
+  movements.push({ prod, type, date });
+  localStorage.setItem('movements', JSON.stringify(movements));
+  displayMovements();
+}
+
+function displayMovements() {
+  const tbody = document.querySelector('#movements-table tbody');
+  tbody.innerHTML = '';
+  movements.forEach(m => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${m.prod}</td>
+      <td>${m.type === 'in' ? 'Intrare' : 'Ieșire'}</td>
+      <td>${new Date(m.date).toLocaleDateString()}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+window.addEventListener('load', () => {
+  // Populează lista de produse
+  const prodSelect = document.getElementById('movement-product');
+  inventory.forEach(item => {
+    const opt = document.createElement('option');
+    opt.value = item.product;
+    opt.textContent = item.product;
+    prodSelect.appendChild(opt);
+  });
+  displayMovements();
+});
+// ==== Sfârșit Script Mișcări Stoc ====
+
     // Inițializare la încărcarea paginii
     window.onload = function() {
       const now = new Date();
